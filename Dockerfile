@@ -14,12 +14,19 @@ RUN add-apt-repository ppa:nilarimogard/webupd8
 RUN apt-get -y update
 RUN apt-get -y install grive
 
-# Exposed volume for Google Drive sync
-RUN mkdir -p /data
-VOLUME /data
-WORKDIR /data
+ENV GRIVE_SYNC_INTERVAL=1
 
-ADD ./gdrive-init.sh /usr/local/bin/gdrive-init.sh
-RUN chmod a+x /usr/local/bin/gdrive-init.sh
+# Create and expose volumes for Google Drive sync
+ENV CONFIG_DIR=/data/config
+ENV SYNC_DIR=/data/drive
 
-ENTRYPOINT ["/usr/local/bin/gdrive-init.sh"]
+VOLUME $CONFIG_DIR $SYNC_DIR
+WORKDIR $SYNC_DIR
+
+ADD ./grive-daemon.sh /usr/local/bin/grive-daemon
+ADD ./auth.sh /usr/local/bin/auth
+
+RUN chmod a+x /usr/local/bin/grive-daemon
+RUN chmod a+x /usr/local/bin/auth
+
+ENTRYPOINT ["/usr/local/bin/grive-daemon"]
